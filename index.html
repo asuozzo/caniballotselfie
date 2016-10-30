@@ -99,25 +99,6 @@ d3.csv("ballotselfie.csv", function(data){
         }
       });
 
-    // var label = svg.selectAll("text")
-    //   .data(json.features)
-    //   .enter()
-    //   .append("text")
-    //   .attr("class", "label")
-    //   .attr("transform", function(d){
-    //     return "translate("+path.centroid(d)+")";
-    //   })
-    //   .style("display",function(d){
-    //     if (w<700){
-    //       return "none";
-    //     } else {
-    //       return "block";
-    //     }
-    //   })
-    //   .text(function(d){
-    //     return d.properties.postal
-    //   })
-
   });
 
 });
@@ -125,7 +106,6 @@ d3.csv("ballotselfie.csv", function(data){
 
 d3.select(window).on('resize', resize);
 
-// var template = _.template(d3.select('#tooltip-template').html());
 
 function resize() {
     // adjust things when the window size changes
@@ -144,44 +124,11 @@ function resize() {
 
     // resize the map
     svg.selectAll('.state').attr('d', path);
-
-    // svg.selectAll("text.label")
-    //   .attr("transform", function(d){
-    //     return "translate("+path.centroid(d)+")";
-    //   })
-    //   .style("display",function(d){
-    //     if (w<700){
-    //       return "none";
-    //     } else {
-    //       return "block";
-    //     }
-    //   })
 }
 
-function tooltipShow(d, i) {
-    var datum = data[d.properties.name];
-    if (!datum) return;
-
-    datum.formats = formats;
-
-    $(this).tooltip({
-        title: template(datum),
-        html: true,
-        container: map.node().parentNode,
-        placement: 'auto'
-    }).tooltip('show');
-}
-
-function tooltipHide(d, i) {
-    $(this).tooltip('hide');
-}
 
 </script>
 
-<script type="x-jst" id="tooltip-template">
-<h5><%= Name %></h5>
-<p><%= formats.percent(percent) %> have a BA degree or higher.</p>
-</script>
 
     </div>
   </body>
