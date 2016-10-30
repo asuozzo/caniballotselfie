@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Can I #ballotselfie?</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <h1>Can I #ballotselfie?</h1>
+      <p>
+        Whether you're voting by mail, at your town or city offices or at a polling place for the 2016 election, you may want to snap a picture of yourself exercising your democratic rights. But could you get in trouble for it? That all depends on what state you're voting in.
+      </p>
+      <p>
+        According to an <a href="http://bigstory.ap.org/article/04c313da0672422ba28bb57c4e4a7ca0/ballot-selfies-look-where-they-are-allowed-or-not">AP analysis</a>, 19 states and Washington, D.C., allow ballot selfies. 18 states prohibit them. In the rest, it's ambiguous.
+      </p>
+      <div class="row">
+        <div class="col-md-8">
+          <div class="tooltip">
+            <div id="value">Value</div>
+          </div>
+          <div id="map"></div>
+        </div>
+        <div class="col-md-4">
+          Filler filler
+        </div>
+      </div>
+    </div>
+<script>
+
+var margin = {top: 30, right: 5, bottom: 30, left: 5},
+  w = parseInt(d3.select('#map').style('width')),
+  w = w - margin.left - margin.right,
+  mapRatio = .5,
+  h = w*mapRatio;
+
+var projection = d3.geo.albersUsa()
+  .scale(w)
+  .translate([w/2,h/2]);
+
+var path = d3.geo.path()
+      .projection(projection);
+
+var color = d3.scale.quantize()
+            .range(["rgb(237,248,233)", "rgb(186,228,179)",
+            "rgb(116,196,118)"]);
+
+var svg = d3.select("#map")
+    .append("svg")
+    .style("width",w+"px")
+    .style("height",h+"px")
+
+d3.csv("ballotselfie.csv", function(data){
+
+  d3.json("states.json", function(json){
+
+    for (var i = 0;i<data.length;i++) {
+
+      var dataState = data[i].state;
+      var dataAllowed = data[i].allowed;
+      var dataNotes = data[i].notes;
+
+      for (var j = 0; j<json.features.length;j++) {
+        var jsonState = json.features[j].properties.name;
+
+        if (dataState == jsonState) {
+          json.features[j].properties.allowed = dataAllowed;
+          json.features[j].properties.notes = dataNotes;
+
+          break;
+        }
+      }
+    }
+
+    svg.selectAll("path.state")
+      .data(json.features)
+      .enter()
+      .append("path")
+      .attr("d",path)
+      .attr("class","state")
+      .attr("id", function(d){
+        return d.properties.name.toLowerCase()
+      })
+      .style("fill", function(d){
+        var allowed = d.properties.allowed;
+        if (allowed) {
+          if (allowed === "yes"){
+            return "#298D08"
+          } else if (allowed === "no") {
+            return "#E73838"
+          } else {
+            return "#EEF645"
+          }
+        } else {
+          return "#ccc"
+        }
+      });
+
+    // var label = svg.selectAll("text")
+    //   .data(json.features)
+    //   .enter()
+    //   .append("text")
+    //   .attr("class", "label")
+    //   .attr("transform", function(d){
+    //     return "translate("+path.centroid(d)+")";
+    //   })
+    //   .style("display",function(d){
+    //     if (w<700){
+    //       return "none";
+    //     } else {
+    //       return "block";
+    //     }
+    //   })
+    //   .text(function(d){
+    //     return d.properties.postal
+    //   })
+
+  });
+
+});
+
+
+d3.select(window).on('resize', resize);
+
+// var template = _.template(d3.select('#tooltip-template').html());
+
+function resize() {
+    // adjust things when the window size changes
+    w = parseInt(d3.select('#map').style('width'), 10),
+    w = w - margin.left - margin.right,
+    h = w*mapRatio;
+
+    // update projection
+    projection
+        .translate([w/2, h/2])
+        .scale(w);
+
+    // resize the map container
+    svg.style('width', w + 'px')
+      .style('height', h + 'px');
+
+    // resize the map
+    svg.selectAll('.state').attr('d', path);
+
+    // svg.selectAll("text.label")
+    //   .attr("transform", function(d){
+    //     return "translate("+path.centroid(d)+")";
+    //   })
+    //   .style("display",function(d){
+    //     if (w<700){
+    //       return "none";
+    //     } else {
+    //       return "block";
+    //     }
+    //   })
+}
+
+function tooltipShow(d, i) {
+    var datum = data[d.properties.name];
+    if (!datum) return;
+
+    datum.formats = formats;
+
+    $(this).tooltip({
+        title: template(datum),
+        html: true,
+        container: map.node().parentNode,
+        placement: 'auto'
+    }).tooltip('show');
+}
+
+function tooltipHide(d, i) {
+    $(this).tooltip('hide');
+}
+
+</script>
+
+<script type="x-jst" id="tooltip-template">
+<h5><%= Name %></h5>
+<p><%= formats.percent(percent) %> have a BA degree or higher.</p>
+</script>
+
+    </div>
+  </body>
+</html>

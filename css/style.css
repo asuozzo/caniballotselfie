@@ -1,0 +1,9 @@
+.label {
+  text-anchor:middle;
+  cursor:default;
+}
+
+.state {
+  fill:none;
+  stroke:#777;
+}
