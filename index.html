@@ -80,7 +80,7 @@ d3.csv("ballotselfie.csv", function(r){
 
 function tooltipLayout(d) {
 
-  var html = '<span id="tooltip-body"><hr><h3>'+d.data.state+"</h3><hr><p><b>Are ballot selfies allowed?</b></p><p>"
+  var html = '<span id="tooltip-body"><h3>'+d.data.state+"</h3><hr><p><b>Are ballot selfies allowed?</b></p><p>"
   html += allowedornot(d.data.value)
   html += " " + d.data.notes + "</p><hr></span>";
   return html;
