@@ -6,125 +6,85 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="css/squaire.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+    <script src="js/squaire.min.js" charset="utf-8"></script>
+    <script src="https://use.fontawesome.com/762411fe70.js"></script>
   </head>
   <body>
     <div class="container-fluid">
-      <h1>Can I #ballotselfie?</h1>
-      <p>
-        Whether you're voting by mail, at your town or city offices or at a polling place for the 2016 election, you may want to snap a picture of yourself exercising your democratic rights. But could you get in trouble for it? That all depends on what state you're voting in.
-      </p>
-      <p>
-        According to an <a href="http://bigstory.ap.org/article/04c313da0672422ba28bb57c4e4a7ca0/ballot-selfies-look-where-they-are-allowed-or-not">AP analysis</a>, 19 states and Washington, D.C., allow ballot selfies. 18 states prohibit them. In the rest, it's ambiguous.
-      </p>
-      <div class="row">
-        <div class="col-md-8">
-          <div class="tooltip">
-            <div id="value">Value</div>
+      <div class="col-sm-12">
+        <h1>Can I #ballotselfie?</h1>
+        <p>
+          Whether you're voting by mail, at your town or city offices or at a polling place for the 2016 election, you may want to snap a picture of yourself exercising your democratic rights. But could you get in trouble for it? That all depends on what state you're voting in.
+        </p>
+        <p>
+          According to an <a href="http://bigstory.ap.org/article/04c313da0672422ba28bb57c4e4a7ca0/ballot-selfies-look-where-they-are-allowed-or-not">AP analysis</a>, 18 states ban the ballot selfie. 19 states and Washington, D.C., allow you to take pics with your ballot, while laws in the other 13 states are more ambiguous. There are signs the tide may be turning toward the humble ballot selfie, though — in two recent cases, <a href="http://www.slate.com/articles/technology/future_tense/2016/09/voting_booth_ballot_selfie_bans_violate_the_first_amendment.html">federal judges ruled that</a> laws banning ballot selfies in New Hampshire and Indiana were unconstitutional.
+        </p>
+        <p>
+          For more information on laws specific to your state, city or town, contact your local election officials.
+        </p>
+        <div class="row">
+          <div class="col-sm-8" id="map-container"></div>
+          <div class="col-sm-4" id="tooltip"><hr><h4>Hover over a state to find out more about ballot selfie laws</h4><hr></div>
+        </div>
+        <div class="row">
+          <div class="col-sm-12">
+            <p>
+              <b>Source</b>: <a href="http://bigstory.ap.org/article/04c313da0672422ba28bb57c4e4a7ca0/ballot-selfies-look-where-they-are-allowed-or-not">Associated Press,</a> unless otherwise noted.
+            </p>
+
           </div>
-          <div id="map"></div>
         </div>
-        <div class="col-md-4">
-          Filler filler
-        </div>
+
       </div>
     </div>
+    <footer class="footer">
+      <div class="container">
+        <p class="text-muted">By Andrea Suozzo. <a href="https://github.com/asuozzo"><i class="fa fa-github" aria-hidden="true"></i> github</a> <a href="https://twitter.com/asuozzo"><i class="fa fa-twitter" aria-hidden="true"></i> twitter</a></p>
+      </div>
+    </footer>
 <script>
 
-var margin = {top: 30, right: 5, bottom: 30, left: 5},
-  w = parseInt(d3.select('#map').style('width')),
-  w = w - margin.left - margin.right,
-  mapRatio = .5,
-  h = w*mapRatio;
+var data = {}
 
-var projection = d3.geo.albersUsa()
-  .scale(w)
-  .translate([w/2,h/2]);
+d3.csv("ballotselfie.csv", function(r){
+  data[r.postal] = r;
+  delete data[r.postal].postal;
+  return r;
+  },
+  function(csv){
+    var map = new Squaire(data, {
+      indexType: "string",
+      colors: d3.scale.ordinal().domain(["yes", "no", "maybe"]).range(["#298D08","#E73838","#EEF645"]),
+      tooltip: {
+  			enabled: true,
+  			mode: 'static',
+  			el: "#tooltip",
+  			layout: tooltipLayout
+		}
+    });
+  }
+)
 
-var path = d3.geo.path()
-      .projection(projection);
+function tooltipLayout(d) {
 
-var color = d3.scale.quantize()
-            .range(["rgb(237,248,233)", "rgb(186,228,179)",
-            "rgb(116,196,118)"]);
-
-var svg = d3.select("#map")
-    .append("svg")
-    .style("width",w+"px")
-    .style("height",h+"px")
-
-d3.csv("ballotselfie.csv", function(data){
-
-  d3.json("states.json", function(json){
-
-    for (var i = 0;i<data.length;i++) {
-
-      var dataState = data[i].state;
-      var dataAllowed = data[i].allowed;
-      var dataNotes = data[i].notes;
-
-      for (var j = 0; j<json.features.length;j++) {
-        var jsonState = json.features[j].properties.name;
-
-        if (dataState == jsonState) {
-          json.features[j].properties.allowed = dataAllowed;
-          json.features[j].properties.notes = dataNotes;
-
-          break;
-        }
-      }
-    }
-
-    svg.selectAll("path.state")
-      .data(json.features)
-      .enter()
-      .append("path")
-      .attr("d",path)
-      .attr("class","state")
-      .attr("id", function(d){
-        return d.properties.name.toLowerCase()
-      })
-      .style("fill", function(d){
-        var allowed = d.properties.allowed;
-        if (allowed) {
-          if (allowed === "yes"){
-            return "#298D08"
-          } else if (allowed === "no") {
-            return "#E73838"
-          } else {
-            return "#EEF645"
-          }
-        } else {
-          return "#ccc"
-        }
-      });
-
-  });
-
-});
-
-
-d3.select(window).on('resize', resize);
-
-
-function resize() {
-    // adjust things when the window size changes
-    w = parseInt(d3.select('#map').style('width'), 10),
-    w = w - margin.left - margin.right,
-    h = w*mapRatio;
-
-    // update projection
-    projection
-        .translate([w/2, h/2])
-        .scale(w);
-
-    // resize the map container
-    svg.style('width', w + 'px')
-      .style('height', h + 'px');
-
-    // resize the map
-    svg.selectAll('.state').attr('d', path);
+  var html = '<span id="tooltip-body"><hr><h3>'+d.data.state+"</h3><hr><p><b>Are ballot selfies allowed?</b></p><p>"
+  html += allowedornot(d.data.value)
+  html += " " + d.data.notes + "</p><hr></span>";
+  return html;
 }
+
+function allowedornot(i){
+  if (i === "yes"){
+    return "Yep!"
+  }
+  if(i === "no"){
+    return "Nope."
+  } else {
+    return "Unclear."
+  }
+};
 
 
 </script>
