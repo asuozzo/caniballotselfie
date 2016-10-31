@@ -30,8 +30,8 @@ hr {
 
 @media (min-width: 1200px) {
   #map-container {
-    padding-left:100px;
-    padding-right:100px;
+    width:620px;
+    margin:auto;
   }
 
 }
